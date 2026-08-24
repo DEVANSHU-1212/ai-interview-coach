@@ -1,6 +1,5 @@
 import requests
 
-
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "llama3.2"
 
@@ -8,7 +7,7 @@ MODEL = "llama3.2"
 def evaluate_answer(question, answer, role):
 
     prompt = f"""
-You are an expert technical interviewer.
+You are an expert technical interviewer evaluating a candidate.
 
 Candidate Role:
 {role}
@@ -19,24 +18,47 @@ Interview Question:
 Candidate Answer:
 {answer}
 
-Evaluate the candidate's answer.
+Evaluate the answer carefully.
 
-Give scores from 0 to 10 for:
+Give a score from 0 to 10 for each:
 
-1. Technical Accuracy
-2. Relevance
-3. Clarity
-4. Completeness
+Technical Accuracy
+Relevance
+Clarity
+Completeness
 
-Also provide:
+Then provide:
 
-- Overall Score
-- Strengths
-- Weaknesses
-- Improvement Advice
-- Better Answer
+Overall Score
+Strengths
+Weaknesses
+Improvement Advice
+Better Answer
 
-Return the evaluation in a clear structured format.
+Use this exact format:
+
+TECHNICAL ACCURACY: X/10
+RELEVANCE: X/10
+CLARITY: X/10
+COMPLETENESS: X/10
+OVERALL SCORE: X/10
+
+STRENGTHS:
+- point 1
+- point 2
+
+WEAKNESSES:
+- point 1
+- point 2
+
+IMPROVEMENT ADVICE:
+- advice 1
+- advice 2
+
+BETTER ANSWER:
+Write a concise and technically correct improved answer.
+
+Do not use markdown headings.
 """
 
     response = requests.post(

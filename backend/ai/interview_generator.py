@@ -1,47 +1,57 @@
-import requests
+async function generateInterview() {
+  if (!file) {
+    setError("Please upload your resume PDF.");
+    return;
+  }
 
+  setLoading(true);
+  setError("");
+  setQuestions([]);
+  setFeedback("");
+  setAnswer("");
+  setFinished(false);
+  setCurrentQuestion(0);
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3.2"
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
+    const response = await fetch(
+      `http://127.0.0.1:8000/generate-interview?role=${encodeURIComponent(role)}`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
-def generate_questions(role, experience, skills, difficulty):
+    if (!response.ok) {
+      throw new Error("Failed to generate interview");
+    }
 
-    skills_text = ", ".join(skills)
+    const data = await response.json();
 
-    prompt = f"""
-You are an expert technical interviewer.
+    if (!data.questions) {
+      throw new Error("No questions received");
+    }
 
-Create 5 interview questions for:
+    // 👇 YAHAN parsing code hai
+    const questions = data.questions;
 
-Job Role: {role}
-Experience Level: {experience}
-Skills: {skills_text}
-Difficulty: {difficulty}
+    const questionList = questions
+      .split("\n")
+      .map((line: string) => line.trim())
+      .filter((line: string) => /^\d+\.\s+/.test(line))
+      .map((line: string) => line.replace(/^\d+\.\s+/, ""));
 
-Requirements:
+    setQuestions(questionList);
 
-- Questions must be relevant to the job role.
-- Include technical questions.
-- Include practical/problem-solving questions.
-- Include questions based on the candidate's skills.
-- Avoid repetitive questions.
+  } catch (error) {
+    console.error(error);
 
-Return exactly 5 questions numbered 1 to 5.
-"""
-
-    response = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        },
-        timeout=120
-    )
-
-    response.raise_for_status()
-
-    result = response.json()
-
-    return result["response"]
+    setError(
+      "Could not connect to the backend. Make sure FastAPI and Ollama are running."
+    );
+  } finally {
+    setLoading(false);
+  }
+}

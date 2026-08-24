@@ -5,61 +5,58 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "llama3.2"
 
 
-def generate_interview_questions(resume_text, role):
-
+def generate_interview_questions(resume_text: str, role: str):
     prompt = f"""
 You are an expert technical interviewer.
 
-Create a personalized interview for this candidate.
+Create interview questions for this candidate.
 
-TARGET JOB ROLE:
+TARGET ROLE:
 {role}
 
 CANDIDATE RESUME:
 {resume_text}
 
-Generate exactly:
+Generate:
 
 1. 5 Technical Questions
-2. 3 Project-Based Questions
-3. 2 HR/Behavioral Questions
+2. 3 Resume/Project Questions
+3. 2 Problem-Solving Questions
+4. 2 HR/Behavioral Questions
 
-Rules:
-- Questions must be relevant to the target role.
-- Use the candidate's actual skills and projects.
-- Do not invent projects or experience.
-- Include a mix of easy, medium and difficult questions.
-- Make the questions suitable for a real job interview.
+Make the questions relevant to the candidate's resume and target role.
 
-Return the questions in this format:
+Do not provide answers.
+Only provide questions.
 
-TECHNICAL QUESTIONS:
-1.
-2.
-3.
-4.
-5.
-
-PROJECT QUESTIONS:
-1.
-2.
-3.
-
-HR QUESTIONS:
-1.
-2.
+Use clear headings and numbered questions.
 """
 
-    response = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        },
-        timeout=180
-    )
+    try:
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=120
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    return response.json()["response"]
+        data = response.json()
+
+        return data.get(
+            "response",
+            "No interview questions were generated."
+        )
+
+    except requests.exceptions.ConnectionError:
+        return "ERROR: Ollama is not running."
+
+    except requests.exceptions.Timeout:
+        return "ERROR: Ollama request timed out."
+
+    except Exception as e:
+        return f"ERROR: {str(e)}"
